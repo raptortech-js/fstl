@@ -1,4 +1,5 @@
 #include <QMouseEvent>
+#include <QKeyEvent>
 
 #include <cmath>
 
@@ -19,6 +20,7 @@ Canvas::Canvas(const QSurfaceFormat& format, QWidget *parent)
     styleFile.open( QFile::ReadOnly );
     setStyleSheet(styleFile.readAll());
 
+    setFocusPolicy(Qt::StrongFocus);
     anim.setDuration(100);
 }
 
@@ -224,6 +226,48 @@ QMatrix4x4 Canvas::view_matrix() const
     m.scale(zoom, zoom, 1);
     m(3, 2) = perspective;
     return m;
+}
+
+void Canvas::keyPressEvent(QKeyEvent *event)
+{
+	float dx = 0;
+	float dy = 0;
+
+
+	switch(event->key()) {
+		case Qt::Key_R:
+			yaw = fmod(yaw-10, 360);
+			break;
+		case Qt::Key_W:
+			yaw = fmod(yaw+10, 360);
+			break;
+		case Qt::Key_S:
+			tilt = fmod(tilt-10, 360);
+			break;
+		case Qt::Key_F:
+			tilt = fmod(tilt+10, 360);
+			break;
+		case Qt::Key_U:
+			dx = -10;
+			break;
+		case Qt::Key_O:
+			dx = +10;
+			break;
+		case Qt::Key_J:
+			dy = -10;
+			break;
+		case Qt::Key_L:
+			dy = +10;
+			break;
+		default:
+			return;
+	}
+
+	center = transform_matrix().inverted() *
+                  view_matrix().inverted() *
+                  QVector3D(-dx / (0.5*width()), -dy / (0.5*height()), 0);
+
+	update();
 }
 
 void Canvas::mousePressEvent(QMouseEvent* event)
